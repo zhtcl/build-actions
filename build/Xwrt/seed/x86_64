@@ -1,4 +1,13 @@
 CONFIG_TARGET_at91=y
 CONFIG_TARGET_at91_sama5=y
 CONFIG_TARGET_at91_sama5_DEVICE_microchip_sama5d3-xplained=y
+CONFIG_PACKAGE_ddns-scripts=y
+CONFIG_PACKAGE_ddns-scripts-services=y
+CONFIG_PACKAGE_kmod-usb-printer=y
+CONFIG_PACKAGE_luci-app-adguardhome=y
+CONFIG_PACKAGE_luci-app-ddns=y
+CONFIG_PACKAGE_luci-app-usb-printer=y
+CONFIG_PACKAGE_luci-i18n-ddns-zh-cn=y
+CONFIG_PACKAGE_luci-i18n-usb-printer-zh-cn=y
+CONFIG_PACKAGE_p910nd=y
 CONFIG_TARGET_ROOTFS_PARTSIZE=950
