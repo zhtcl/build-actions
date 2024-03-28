@@ -195,6 +195,7 @@ jobs:
     
     - name: SSH远程连接（make menuconfig）
       if: env.SSH_ACTION == 'true'
+      run: |
        cd openwrt
        sed -i 's/+firewall/+uci-firewall/g' feeds/luci/applications/luci-app-firewall/Makefile
       uses: danshui-git/debugger-action@main
