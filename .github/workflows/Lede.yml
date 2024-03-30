@@ -54,8 +54,8 @@ on:
         type: choice
         options:
           - '关闭'
-          - 'Telegram'
-          - 'Pushplus'
+          - 'TG'
+          - 'PUSH'
       SSH_ACTION:
         description: 'SSH远程配置固件'
         required: false
