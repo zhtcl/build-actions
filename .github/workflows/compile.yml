@@ -146,89 +146,122 @@ jobs:
         make -j$(nproc) || make -j1|| make -j1 V=s
         echo "date=$(date "+%Y%m%d%H%M%S")" >> ${GITHUB_ENV}
         source ${BUILD_PATH}/common.sh && firmware_jiance
-        
-    - name: 自动打包Amlogic_Rockchip系列固件
-      if: steps.compile.outcome == 'success' && env.PACKAGING_FIRMWARE == 'true'
-      uses: ncipollo/release-action@main
-      with:
-        name: rootfs.tar.gz
-        tag: targz
-        token: ${{ secrets.REPO_TOKEN }}
-        allowUpdates: true
-        replacesArtifacts: true
-        artifacts: openwrt/targz/*rootfs.tar.gz
 
-    - name: 整理固件文件夹(需配合diy-part.sh设定使用)
-      continue-on-error: true
-      if: steps.compile.outcome == 'success'
-      id: organizer
+    - name: 整理文件
+      id: organize
+      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        cd openwrt
-        source ${BUILD_PATH}/common.sh && Diy_firmware
-        
-    - name: 上传固件在 github Artifacts
-      if: steps.compile.outcome == 'success' && env.UPLOAD_FIRMWARE == 'true'
-      uses: actions/upload-artifact@main
-      with:
-        name: ${{ env.SOURCE }}-${{ env.LUCI_EDITION }}-${{ env.TARGET_PROFILE }}-firmware-${{ env.Firmware_Date }}
-        path: ${{ env.FIRMWARE_PATH }}
-    
-    - name: 发布固件
-      if: steps.compile.outcome == 'success' && env.UPLOAD_RELEASE == 'true' && env.ING_FIRMWAR == 'true' && env.REPO_TOKEN
-      uses: ncipollo/release-action@v1
-      with:
-        name: ${{ env.SOURCE }}-${{ env.PROMPT_TING }}
-        tag: a${{ env.date }}
-        token: ${{ secrets.REPO_TOKEN }}
-        allowUpdates: true
-        body: ${{ env.Tongzhi_Date }}
-        artifacts: "${{ env.FIRMWARE_PATH }}/*"
-        
-    - name: 发送[在线更新固件]至云端1
-      id: autoup
-      if: steps.compile.outcome == 'success' && env.UPDATE_FIRMWARE_ONLINE == 'true' && env.REPO_TOKEN
-      uses: ncipollo/release-action@v1
-      with:
-        name: AutoUpdate
-        tag: ${{ env.Update_tag }}
-        token: ${{ secrets.REPO_TOKEN }}
-        allowUpdates: true
-        body: ${{ env.Tongzhi_Date }}
-        artifacts: "${{ env.BIN_PATH }}/*"
-        
-    - name: 发送[在线更新固件]至云端2
-      if: steps.autoup.outcome == 'success' && env.UPDATE_FIRMWARE_ONLINE == 'true' && env.REPO_TOKEN
-      run: |
-        mkdir -p Github_Api
-        cd Github_Api
-        curl -H "Authorization: Bearer ${{ secrets.REPO_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.Update_tag }} -o zzz_api
-        if [[ $? -ne 0 ]]; then
-          curl -H "Authorization: Bearer ${REPO_TOKEN}" https://api.github.com/repos/${GIT_REPOSITORY}/releases/tags/${Update_tag} > zzz_api
-        fi
-        
-    - name: 发送[在线更新固件]至云端3
-      if: steps.autoup.outcome == 'success' && env.UPDATE_FIRMWARE_ONLINE == 'true' && env.REPO_TOKEN
-      uses: ncipollo/release-action@v1
-      with:
-        name: AutoUpdate-${{ env.TARGET_BOARD }}
-        tag: ${{ env.Update_tag }}
-        token: ${{ secrets.REPO_TOKEN }}
-        artifacts: "Github_Api/*"
-        allowUpdates: true
-        body: ${{ env.Tongzhi_Date }}
+        gunzip openwrt/bin/targets/*/*/*.gz
+        for f in openwrt/bin/targets/*/*/*.img; do
+          xz -9 --threads=0 --compress "$f"
+        done
+        rm -rf openwrt/bin/targets/*/*/*.img
+        rm -rf openwrt/bin/targets/*/*/*.gz
+        cd openwrt/bin/targets/*/*
+        rm -rf packages
+        rm -rf *.buildinfo
+        rm -rf profiles.json
+        rm -rf *.manifest
+        rm -rf *.sha
+        rm -rf sha256sums
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
 
-    - name: Telegram或pushplus信息通知
-      if: env.PUSH_PLUS_TOKEN && env.INFORMATION_NOTICE == 'PUSH' || env.TELEGRAM_BOT_TOKEN && env.INFORMATION_NOTICE == 'TG'
-      run: |
-        if [[ "${{ env.INFORMATION_NOTICE }}" == "TG" ]]; then
-          if [[ "${{steps.compile.outcome}}" == 'success' ]]; then
-            curl -k --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data "text=我亲爱的✨主人✨：您使用【${{matrix.target}}】文件夹编译【${REPO_BRANCH}分支的${{env.TARGET_PROFILE}}】固件顺利编译完成了✌️💯💐(${{env.WAREHOUSE_MAN}}仓库的#${{env.RUN_NUMBER}}号)！($(date +%Y年%m月%d号%H时%M分))" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"
-          fi
-        fi
-        if [[ "${{ env.INFORMATION_NOTICE }}" == "PUSH" ]]; then
-          if [[ "${{steps.compile.outcome}}" == 'success' ]]; then
-            curl -k --data token="${{ secrets.PUSH_PLUS_TOKEN }}" --data title="[${{ env.SOURCE }}-${{ env.TARGET_PROFILE }}]编译成功" --data "content=您使用【${{matrix.target}}】文件夹编译【${REPO_BRANCH}分支的${{env.TARGET_PROFILE}}】固件顺利编译完成了✌️💯💐(${{env.WAREHOUSE_MAN}}仓库的#${{env.RUN_NUMBER}}号)！($(date +%Y年%m月%d号%H时%M分))" "http://www.pushplus.plus/send"
-          else
-            curl -k --data token="${{ secrets.PUSH_PLUS_TOKEN }}" --data title="[${{ env.SOURCE }}-${{ env.TARGET_PROFILE }}]编译失败" --data "content=您使用【${{matrix.target}}】文件夹编译【${REPO_BRANCH}分支的${{env.TARGET_PROFILE}}】固件编译失败😒👎✈️(${{env.WAREHOUSE_MAN}}仓库的#${{env.RUN_NUMBER}}号)！($(date +%Y年%m月%d号%H时%M分))" "http://www.pushplus.plus/send"
-          fi
-        fi
+    - name: 上传固件到Releases
+      uses: softprops/action-gh-release@master
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+      with:
+        tag_name: OpenWrt直刷包_${{env.DATE}}
+        files: ${{ env.FIRMWARE }}/*
+        body: |
+          ====================固件信息=======================
+           源码：${{ matrix.repo_info.repo_url }}
+           分支：${{ matrix.repo_info.branch }}
+           扩容：sh 1.sh
+           默认密码：无        
+#    - name: 自动打包Amlogic_Rockchip系列固件
+#      if: steps.compile.outcome == 'success' && env.PACKAGING_FIRMWARE == 'true'
+#      uses: ncipollo/release-action@main
+#      with:
+#        name: rootfs.tar.gz
+#        tag: targz
+#        token: ${{ secrets.REPO_TOKEN }}
+#        allowUpdates: true
+#        replacesArtifacts: true
+#        artifacts: openwrt/targz/*rootfs.tar.gz
+#
+#    - name: 整理固件文件夹(需配合diy-part.sh设定使用)
+#      continue-on-error: true
+#      if: steps.compile.outcome == 'success'
+#      id: organizer
+#      run: |
+#        cd openwrt
+#        source ${BUILD_PATH}/common.sh && Diy_firmware
+#        
+#    - name: 上传固件在 github Artifacts
+#      if: steps.compile.outcome == 'success' && env.UPLOAD_FIRMWARE == 'true'
+#      uses: actions/upload-artifact@main
+#      with:
+#        name: ${{ env.SOURCE }}-${{ env.LUCI_EDITION }}-${{ env.TARGET_PROFILE }}-firmware-${{ env.Firmware_Date }}
+#        path: ${{ env.FIRMWARE_PATH }}
+#    
+#    - name: 发布固件
+#      if: steps.compile.outcome == 'success' && env.UPLOAD_RELEASE == 'true' && env.ING_FIRMWAR == 'true' && env.REPO_TOKEN
+#      uses: ncipollo/release-action@v1
+#      with:
+#        name: ${{ env.SOURCE }}-${{ env.PROMPT_TING }}
+#        tag: a${{ env.date }}
+#        token: ${{ secrets.REPO_TOKEN }}
+#        allowUpdates: true
+#        body: ${{ env.Tongzhi_Date }}
+#        artifacts: "${{ env.FIRMWARE_PATH }}/*"
+#        
+#    - name: 发送[在线更新固件]至云端1
+#      id: autoup
+#      if: steps.compile.outcome == 'success' && env.UPDATE_FIRMWARE_ONLINE == 'true' && env.REPO_TOKEN
+#      uses: ncipollo/release-action@v1
+#      with:
+#        name: AutoUpdate
+#        tag: ${{ env.Update_tag }}
+#        token: ${{ secrets.REPO_TOKEN }}
+#        allowUpdates: true
+#        body: ${{ env.Tongzhi_Date }}
+#        artifacts: "${{ env.BIN_PATH }}/*"
+#        
+#    - name: 发送[在线更新固件]至云端2
+#      if: steps.autoup.outcome == 'success' && env.UPDATE_FIRMWARE_ONLINE == 'true' && env.REPO_TOKEN
+#      run: |
+#        mkdir -p Github_Api
+#        cd Github_Api
+#        curl -H "Authorization: Bearer ${{ secrets.REPO_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.Update_tag }} -o zzz_api
+#        if [[ $? -ne 0 ]]; then
+#          curl -H "Authorization: Bearer ${REPO_TOKEN}" https://api.github.com/repos/${GIT_REPOSITORY}/releases/tags/${Update_tag} > zzz_api
+#        fi
+#        
+#    - name: 发送[在线更新固件]至云端3
+#      if: steps.autoup.outcome == 'success' && env.UPDATE_FIRMWARE_ONLINE == 'true' && env.REPO_TOKEN
+#      uses: ncipollo/release-action@v1
+#      with:
+#        name: AutoUpdate-${{ env.TARGET_BOARD }}
+#        tag: ${{ env.Update_tag }}
+#        token: ${{ secrets.REPO_TOKEN }}
+#        artifacts: "Github_Api/*"
+#        allowUpdates: true
+#        body: ${{ env.Tongzhi_Date }}
+#
+#    - name: Telegram或pushplus信息通知
+#      if: env.PUSH_PLUS_TOKEN && env.INFORMATION_NOTICE == 'PUSH' || env.TELEGRAM_BOT_TOKEN && env.INFORMATION_NOTICE == 'TG'
+#      run: |
+#        if [[ "${{ env.INFORMATION_NOTICE }}" == "TG" ]]; then
+#          if [[ "${{steps.compile.outcome}}" == 'success' ]]; then
+#            curl -k --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data "text=我亲爱的✨主人✨：您使用【${{matrix.target}}】文件夹编译【${REPO_BRANCH}分支的${{env.TARGET_PROFILE}}】固件顺利编译完成了✌️💯💐(${{env.WAREHOUSE_MAN}}仓库的#${{env.RUN_NUMBER}}号)！($(date +%Y年%m月%d号%H时%M分))" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"
+#          fi
+#        fi
+#        if [[ "${{ env.INFORMATION_NOTICE }}" == "PUSH" ]]; then
+#          if [[ "${{steps.compile.outcome}}" == 'success' ]]; then
+#            curl -k --data token="${{ secrets.PUSH_PLUS_TOKEN }}" --data title="[${{ env.SOURCE }}-${{ env.TARGET_PROFILE }}]编译成功" --data "content=您使用【${{matrix.target}}】文件夹编译【${REPO_BRANCH}分支的${{env.TARGET_PROFILE}}】固件顺利编译完成了✌️💯💐(${{env.WAREHOUSE_MAN}}仓库的#${{env.RUN_NUMBER}}号)！($(date +%Y年%m月%d号%H时%M分))" "http://www.pushplus.plus/send"
+#          else
+#            curl -k --data token="${{ secrets.PUSH_PLUS_TOKEN }}" --data title="[${{ env.SOURCE }}-${{ env.TARGET_PROFILE }}]编译失败" --data "content=您使用【${{matrix.target}}】文件夹编译【${REPO_BRANCH}分支的${{env.TARGET_PROFILE}}】固件编译失败😒👎✈️(${{env.WAREHOUSE_MAN}}仓库的#${{env.RUN_NUMBER}}号)！($(date +%Y年%m月%d号%H时%M分))" "http://www.pushplus.plus/send"
+#          fi
+#        fi
