@@ -46,8 +46,6 @@ CONFIG_PACKAGE_coreutils-stty=y
 CONFIG_PACKAGE_ddns-scripts-cloudflare=y
 CONFIG_PACKAGE_ddns-scripts-godaddy=y
 CONFIG_PACKAGE_ddns-scripts-huaweicloud=y
-# CONFIG_PACKAGE_dns2socks is not set
-# CONFIG_PACKAGE_dns2tcp is not set
 CONFIG_PACKAGE_dnsmasq_full_auth=y
 CONFIG_PACKAGE_dnsmasq_full_dnssec=y
 CONFIG_PACKAGE_drill=y
@@ -65,7 +63,6 @@ CONFIG_PACKAGE_iptables-nft=y
 CONFIG_PACKAGE_iputils-arping=y
 CONFIG_PACKAGE_ipv6helper=y
 CONFIG_PACKAGE_iwinfo=y
-# CONFIG_PACKAGE_jq is not set
 CONFIG_PACKAGE_kmod-can=m
 CONFIG_PACKAGE_kmod-crypto-kpp=y
 CONFIG_PACKAGE_kmod-crypto-lib-chacha20=y
@@ -128,7 +125,6 @@ CONFIG_PACKAGE_libxtables-nft=y
 CONFIG_PACKAGE_libyaml=y
 CONFIG_PACKAGE_libzstd=y
 CONFIG_PACKAGE_lsblk=y
-# CONFIG_PACKAGE_lua-neturl is not set
 # CONFIG_PACKAGE_luci-app-accesscontrol is not set
 CONFIG_PACKAGE_luci-app-acme=y
 CONFIG_PACKAGE_luci-app-adguardhome=y
@@ -150,10 +146,11 @@ CONFIG_PACKAGE_luci-app-passwall2_Iptables_Transparent_Proxy=y
 CONFIG_PACKAGE_luci-app-ramfree=y
 CONFIG_PACKAGE_luci-app-smartdns=y
 CONFIG_PACKAGE_luci-app-socat=y
-# CONFIG_PACKAGE_luci-app-ssr-plus is not set
 CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_ChinaDNS_NG=y
 CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Hysteria=y
 CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_IPT2Socks=y
+CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Shadowsocks_NONE_Client=y
+# CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Shadowsocks_Rust_Client is not set
 CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Trojan=y
 CONFIG_PACKAGE_luci-app-transmission=y
 CONFIG_PACKAGE_luci-app-ttyd=y
@@ -178,7 +175,6 @@ CONFIG_PACKAGE_luci-i18n-usb-printer-zh-cn=y
 CONFIG_PACKAGE_luci-i18n-wifischedule-zh-cn=y
 CONFIG_PACKAGE_luci-proto-wireguard=y
 CONFIG_PACKAGE_luci-theme-argon=y
-# CONFIG_PACKAGE_microsocks is not set
 # CONFIG_PACKAGE_miniupnpd is not set
 CONFIG_PACKAGE_mwan3=y
 # CONFIG_PACKAGE_nlbwmon is not set
@@ -201,10 +197,7 @@ CONFIG_PACKAGE_ruby-yaml=y
 CONFIG_PACKAGE_script-utils=y
 CONFIG_PACKAGE_shadowsocks-libev-ss-local=y
 CONFIG_PACKAGE_shadowsocks-libev-ss-redir=y
-# CONFIG_PACKAGE_shadowsocks-libev-ss-server is not set
 # CONFIG_PACKAGE_shadowsocks-rust-sslocal is not set
-# CONFIG_PACKAGE_shadowsocksr-libev-ssr-check is not set
-# CONFIG_PACKAGE_shadowsocksr-libev-ssr-server is not set
 CONFIG_PACKAGE_sing-box=y
 CONFIG_PACKAGE_smartdns=y
 CONFIG_PACKAGE_sms-tool=y
