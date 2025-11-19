@@ -39,6 +39,7 @@ on:
           - 'xiaoyu_xy-c5'
           - 'r2s'
           - 'onecloud'
+          - 'oes_plus'
       CPU_SELECTION:
         description: 'CPU优选,增加编译速度'
         required: true
