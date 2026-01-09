@@ -92,6 +92,11 @@ jobs:
       run: |
         cd openwrt
         make download -j8
+
+    - name: 删除 feeds 的 .git 提升空间
+      working-directory: /${{ env.DIY_WORK }}/openwrt
+      run: |
+        find feeds -name ".git" -type d -exec rm -rf {} +
     
     - name: 开始编译固件
       id: compile
